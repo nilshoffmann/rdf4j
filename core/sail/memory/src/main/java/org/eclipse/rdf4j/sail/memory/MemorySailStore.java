@@ -58,6 +58,8 @@ import org.slf4j.LoggerFactory;
  */
 class MemorySailStore implements SailStore {
 
+	public static final EmptyIteration<MemStatement, SailException> EMPTY_ITERATION = new EmptyIteration<>();
+	public static final EmptyIteration<MemTriple, SailException> EMPTY_TRIPLE_ITERATION = new EmptyIteration<>();
 	private final Logger logger = LoggerFactory.getLogger(MemorySailStore.class);
 
 	/**
@@ -161,19 +163,19 @@ class MemorySailStore implements SailStore {
 		MemResource memSubj = valueFactory.getMemResource(subj);
 		if (subj != null && memSubj == null) {
 			// non-existent subject
-			return new EmptyIteration<>();
+			return EMPTY_ITERATION;
 		}
 
 		MemIRI memPred = valueFactory.getMemURI(pred);
 		if (pred != null && memPred == null) {
 			// non-existent predicate
-			return new EmptyIteration<>();
+			return EMPTY_ITERATION;
 		}
 
 		MemValue memObj = valueFactory.getMemValue(obj);
 		if (obj != null && memObj == null) {
 			// non-existent object
-			return new EmptyIteration<>();
+			return EMPTY_ITERATION;
 		}
 
 		MemResource[] memContexts;
@@ -186,7 +188,7 @@ class MemorySailStore implements SailStore {
 			MemResource memContext = valueFactory.getMemResource(contexts[0]);
 			if (memContext == null) {
 				// non-existent context
-				return new EmptyIteration<>();
+				return EMPTY_ITERATION;
 			}
 
 			memContexts = new MemResource[] { memContext };
@@ -203,7 +205,7 @@ class MemorySailStore implements SailStore {
 
 			if (contextSet.isEmpty()) {
 				// no known contexts specified
-				return new EmptyIteration<>();
+				return EMPTY_ITERATION;
 			}
 
 			memContexts = contextSet.toArray(new MemResource[contextSet.size()]);
@@ -231,6 +233,10 @@ class MemorySailStore implements SailStore {
 			}
 		}
 
+		if (smallestList == MemValue.EMPTY_LIST) {
+			return EMPTY_ITERATION;
+		}
+
 		return new MemStatementIterator<>(smallestList, memSubj, memPred, memObj, explicit, snapshot, memContexts);
 	}
 
@@ -246,19 +252,19 @@ class MemorySailStore implements SailStore {
 
 		if (subj != null && memSubj == null) {
 			// non-existent subject
-			return new EmptyIteration<>();
+			return EMPTY_TRIPLE_ITERATION;
 		}
 
 		MemIRI memPred = valueFactory.getMemURI(pred);
 		if (pred != null && memPred == null) {
 			// non-existent predicate
-			return new EmptyIteration<>();
+			return EMPTY_TRIPLE_ITERATION;
 		}
 
 		MemValue memObj = valueFactory.getMemValue(obj);
 		if (obj != null && memObj == null) {
 			// non-existent object
-			return new EmptyIteration<>();
+			return EMPTY_TRIPLE_ITERATION;
 		}
 
 		// TODO there is no separate index for Triples, so for now we iterate over all statements to find matches.
