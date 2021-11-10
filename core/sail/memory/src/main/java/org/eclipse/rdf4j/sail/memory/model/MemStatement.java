@@ -143,23 +143,14 @@ public class MemStatement extends ContextStatement {
 		}
 	}
 
-	// This method allows us to check if we have a matching subject without casting to a MemResource
-	boolean matchesSubject(MemResource subject) {
-		return subject == super.getSubject();
-	}
-
-	// This method allows us to check if we have a matching predicate without casting to a MemIRI
-	boolean matchesPredicate(MemIRI predicate) {
-		return predicate == super.getPredicate();
-	}
-
-	// This method allows us to check if we have a matching object without casting to a MemValue
-	boolean matchesObject(MemValue object) {
-		return object == super.getObject();
-	}
-
 	// This method allows us to check if we have a matching context without casting to a MemValue
 	boolean matchesContext(MemResource context) {
 		return context == super.getContext();
+	}
+
+	public boolean matchesSPO(MemResource subject, MemIRI predicate, MemValue object) {
+		return (subject == null || subject == super.getSubject()) &&
+				(predicate == null || predicate == super.getPredicate()) &&
+				(object == null || object == super.getObject());
 	}
 }

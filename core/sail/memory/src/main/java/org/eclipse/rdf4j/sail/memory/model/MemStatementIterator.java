@@ -7,10 +7,7 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.sail.memory.model;
 
-import java.util.Objects;
-
 import org.eclipse.rdf4j.common.iteration.LookAheadIteration;
-import org.eclipse.rdf4j.common.lang.ObjectUtil;
 
 /**
  * A StatementIterator that can iterate over a list of Statement objects. This iterator compares Resource and Literal
@@ -133,7 +130,9 @@ public class MemStatementIterator<X extends Exception> extends LookAheadIteratio
 			// explicit/inferred and snapshot.
 			// Checking explicit/inferred and snapshot requires reading a volatile field, which is fairly slow and the
 			// reason we check this last.
-			if ((matchesSPO(statement)) && matchesContext(statement) && matchesExplicitAndSnapshot(statement)) {
+
+			if ((statement.matchesSPO(subject, predicate, object)) && matchesContext(statement)
+					&& matchesExplicitAndSnapshot(statement)) {
 				return statement;
 			}
 		}
@@ -159,12 +158,6 @@ public class MemStatementIterator<X extends Exception> extends LookAheadIteratio
 	private boolean matchesExplicitAndSnapshot(MemStatement st) {
 		return (explicitNotSpecified || explicit == st.isExplicit()) &&
 				(noIsolation || st.isInSnapshot(snapshot));
-	}
-
-	private boolean matchesSPO(MemStatement st) {
-		return (subject == null || st.matchesSubject(subject)) &&
-				(predicate == null || st.matchesPredicate(predicate)) &&
-				(object == null || st.matchesObject(object));
 	}
 
 }

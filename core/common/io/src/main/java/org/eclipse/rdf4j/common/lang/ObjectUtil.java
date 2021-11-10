@@ -26,6 +26,7 @@ public class ObjectUtil {
 	 *         objects are equal according to the {@link Object#equals} method of the first object; <var>false</var> in
 	 *         all other situations.
 	 */
+	@Deprecated(since = "4.0.0", forRemoval = true)
 	public static boolean nullEquals(Object o1, Object o2) {
 		return Objects.equals(o1, o2);
 	}
