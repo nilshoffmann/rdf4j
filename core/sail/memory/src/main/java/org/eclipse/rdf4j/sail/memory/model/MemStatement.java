@@ -157,4 +157,9 @@ public class MemStatement extends ContextStatement {
 	boolean matchesObject(MemValue object) {
 		return object == super.getObject();
 	}
+
+	// This method allows us to check if we have a matching context without casting to a MemValue
+	boolean matchesContext(MemResource context) {
+		return context == super.getContext();
+	}
 }

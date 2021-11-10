@@ -8,6 +8,8 @@
 
 package org.eclipse.rdf4j.common.lang;
 
+import java.util.Objects;
+
 /**
  * Generic utility methods related to objects.
  *
@@ -25,7 +27,7 @@ public class ObjectUtil {
 	 *         all other situations.
 	 */
 	public static boolean nullEquals(Object o1, Object o2) {
-		return o1 == o2 || o1 != null && o2 != null && o1.equals(o2);
+		return Objects.equals(o1, o2);
 	}
 
 	/**

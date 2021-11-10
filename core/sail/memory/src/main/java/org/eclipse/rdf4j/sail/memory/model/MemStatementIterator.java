@@ -7,6 +7,8 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.sail.memory.model;
 
+import java.util.Objects;
+
 import org.eclipse.rdf4j.common.iteration.LookAheadIteration;
 import org.eclipse.rdf4j.common.lang.ObjectUtil;
 
@@ -127,29 +129,31 @@ public class MemStatementIterator<X extends Exception> extends LookAheadIteratio
 				break;
 			}
 
-			// First check if we match the specified SPO, then check the explicit/inferred and snapshot.
-			// Checking explicit/inferred and snapshot require reading a volatile field, which is fairly slow and the
-			// reason we first check SPO.
-			if ((matchesSPO(statement)) && matchesExplicitAndSnapshot(statement)) {
-
-				// A matching statement has been found
-				// We still need to check the context
-
-				if (contexts != null && contexts.length > 0) {
-					for (MemResource context : contexts) {
-						if (ObjectUtil.nullEquals(statement.getContext(), context)) {
-							return statement;
-						}
-					}
-					// if we get here there was no matching context
-				} else {
-					// there is no context to check so we can return this statement
-					return statement;
-				}
+			// First check if we match the specified SPO, then check the context, then finally check the
+			// explicit/inferred and snapshot.
+			// Checking explicit/inferred and snapshot requires reading a volatile field, which is fairly slow and the
+			// reason we check this last.
+			if ((matchesSPO(statement)) && matchesContext(statement) && matchesExplicitAndSnapshot(statement)) {
+				return statement;
 			}
 		}
 
 		return null;
+	}
+
+	private boolean matchesContext(MemStatement statement) {
+		if (contexts != null && contexts.length > 0) {
+			for (MemResource context : contexts) {
+				if (statement.matchesContext(context)) {
+					return true;
+				}
+			}
+			// if we get here there was no matching context
+			return false;
+		} else {
+			// there is no context to check so we can return this statement
+			return true;
+		}
 	}
 
 	private boolean matchesExplicitAndSnapshot(MemStatement st) {
