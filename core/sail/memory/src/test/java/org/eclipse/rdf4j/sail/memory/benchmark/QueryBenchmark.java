@@ -33,7 +33,6 @@ import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
-import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
@@ -56,11 +55,6 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 public class QueryBenchmark {
 
-	@Param({ "NONE", "READ_COMMITTED" })
-	public IsolationLevels isolationLevel;
-
-	private SailRepository repository;
-
 	private static final String query1;
 	private static final String query2;
 	private static final String query3;
@@ -68,7 +62,6 @@ public class QueryBenchmark {
 	private static final String query9_orderby;
 	private static final String query7_pathexpression1;
 	private static final String query8_pathexpression2;
-
 	private static final Model data;
 
 	static {
@@ -91,6 +84,7 @@ public class QueryBenchmark {
 	}
 
 	List<Statement> statementList;
+	private SailRepository repository;
 
 	public static void main(String[] args) throws RunnerException {
 		Options opt = new OptionsBuilder()
@@ -100,6 +94,10 @@ public class QueryBenchmark {
 				.build();
 
 		new Runner(opt).run();
+	}
+
+	private static InputStream getResourceAsStream(String name) {
+		return QueryBenchmark.class.getClassLoader().getResourceAsStream(name);
 	}
 
 	@Setup(Level.Invocation)
@@ -122,10 +120,6 @@ public class QueryBenchmark {
 
 	}
 
-	private static InputStream getResourceAsStream(String name) {
-		return QueryBenchmark.class.getClassLoader().getResourceAsStream(name);
-	}
-
 	@TearDown(Level.Invocation)
 	public void afterClass() {
 
@@ -137,16 +131,13 @@ public class QueryBenchmark {
 	public long groupByQuery() {
 
 		try (SailRepositoryConnection connection = repository.getConnection()) {
-			connection.begin(isolationLevel);
-			try {
-				return connection
-						.prepareTupleQuery(query1)
-						.evaluate()
-						.stream()
-						.count();
-			} finally {
-				connection.commit();
-			}
+
+			return connection
+					.prepareTupleQuery(query1)
+					.evaluate()
+					.stream()
+					.count();
+
 		}
 	}
 
@@ -154,30 +145,27 @@ public class QueryBenchmark {
 	public long complexQuery() {
 
 		try (SailRepositoryConnection connection = repository.getConnection()) {
-			connection.begin(isolationLevel);
-			try {
-				return connection
-						.prepareTupleQuery(query4)
-						.evaluate()
-						.stream()
-						.count();
-			} finally {
-				connection.commit();
-			}
+
+			return connection
+					.prepareTupleQuery(query4)
+					.evaluate()
+					.stream()
+					.count();
+
 		}
 	}
 
 	@Benchmark
-	public boolean simpleUpdateQuery() {
+	public boolean simpleUpdateQuery_NONE() {
 
 		try (SailRepositoryConnection connection = repository.getConnection()) {
-			connection.begin(isolationLevel);
+			connection.begin(IsolationLevels.NONE);
 			connection.prepareUpdate(query2).execute();
 			connection.commit();
 		}
 
 		try (SailRepositoryConnection connection = repository.getConnection()) {
-			connection.begin(isolationLevel);
+			connection.begin(IsolationLevels.NONE);
 			connection.prepareUpdate(query3).execute();
 			connection.commit();
 		}
@@ -186,10 +174,40 @@ public class QueryBenchmark {
 	}
 
 	@Benchmark
-	public boolean removeByQuery() {
+	public boolean simpleUpdateQuery_SNAPSHOT_READ() {
 
 		try (SailRepositoryConnection connection = repository.getConnection()) {
-			connection.begin(isolationLevel);
+			connection.begin(IsolationLevels.SNAPSHOT_READ);
+			connection.prepareUpdate(query2).execute();
+			connection.commit();
+		}
+
+		try (SailRepositoryConnection connection = repository.getConnection()) {
+			connection.begin(IsolationLevels.SNAPSHOT_READ);
+			connection.prepareUpdate(query3).execute();
+			connection.commit();
+		}
+		return hasStatement();
+
+	}
+
+	@Benchmark
+	public boolean removeByQuery_NONE() {
+
+		try (SailRepositoryConnection connection = repository.getConnection()) {
+			connection.begin(IsolationLevels.NONE);
+			connection.remove((Resource) null, RDF.TYPE, null);
+			connection.commit();
+		}
+		return hasStatement();
+
+	}
+
+	@Benchmark
+	public boolean removeByQuery_SNAPSHOT_READ() {
+
+		try (SailRepositoryConnection connection = repository.getConnection()) {
+			connection.begin(IsolationLevels.SNAPSHOT_READ);
 			connection.remove((Resource) null, RDF.TYPE, null);
 			connection.commit();
 		}
@@ -201,48 +219,39 @@ public class QueryBenchmark {
 	public long pathExpressionQuery1() {
 
 		try (SailRepositoryConnection connection = repository.getConnection()) {
-			connection.begin(isolationLevel);
-			try {
-				return connection
-						.prepareTupleQuery(query7_pathexpression1)
-						.evaluate()
-						.stream()
-						.count();
-			} finally {
-				connection.commit();
-			}
+
+			return connection
+					.prepareTupleQuery(query7_pathexpression1)
+					.evaluate()
+					.stream()
+					.count();
+
 		}
 	}
 
 	@Benchmark
 	public long pathExpressionQuery2() {
 		try (SailRepositoryConnection connection = repository.getConnection()) {
-			connection.begin(isolationLevel);
-			try {
-				return connection
-						.prepareTupleQuery(query8_pathexpression2)
-						.evaluate()
-						.stream()
-						.count();
-			} finally {
-				connection.commit();
-			}
+
+			return connection
+					.prepareTupleQuery(query8_pathexpression2)
+					.evaluate()
+					.stream()
+					.count();
+
 		}
 	}
 
 	@Benchmark
 	public long orderbyQuery9() {
 		try (SailRepositoryConnection connection = repository.getConnection()) {
-			connection.begin(isolationLevel);
-			try {
-				return connection
-						.prepareTupleQuery(query9_orderby)
-						.evaluate()
-						.stream()
-						.count();
-			} finally {
-				connection.commit();
-			}
+
+			return connection
+					.prepareTupleQuery(query9_orderby)
+					.evaluate()
+					.stream()
+					.count();
+
 		}
 	}
 
